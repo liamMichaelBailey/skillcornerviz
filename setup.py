@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='skillcornerviz',
-    version='1.0.6',
+    version='1.0.8',
 
     url='https://github.com/MarkosBont/skillcorner_library_cleanup',
     author='Liam Michael Bailey',

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "skillcornerviz"
-version = "1.0.6"
+version = "1.0.8"
 authors = [
     {name="Liam Bailey"},
     {name="Markos Bontozoglou"},
@@ -27,7 +27,7 @@ dependencies = ['adjustText>=0.7.3',
                 'setuptools>=65.0.0']
 
 [project.urls]
-GitHub = "https://github.com/MarkosBont/skillcorner_library_cleanup"
+GitHub = "https://github.com/MarkosBont/skillcornerviz"
 
 [tool.setuptools.packages.find]
 where = ["src"]
