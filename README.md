@@ -43,81 +43,93 @@ skillcornerviz/
 ### Code Snippet:
 ```python
 from skillcornerviz.standard_plots import bar_plot as bar
-from skillcornerviz.utils import skillcorner_physical_utils as put
+from skillcornerviz.utils import skillcorner_physical_utils as p_utils
 from skillcorner.client import SkillcornerClient
 import pandas as pd
 
 client = SkillcornerClient(username='YOUR USERNAME', password='YOUR PASSWORD')
 data = client.get_physical(params={'competition': 4, 'season': 28,
                                     'group_by': 'player,team,competition,season,group',
-                                    'playing_time__gte': 60, 'count_match__gte':8,
+                                    'possession': 'all,tip,otip',
+                                    'playing_time__gte': 60, 
+                                    'count_match__gte':8,
                                     'data_version': '3'})
 
 df = pd.DataFrame(data)
+metrics = p_utils.add_standard_metrics(df)
 
-real_madrid = df[df['team_id'] == 262]
-real_forwards = real_madrid[real_madrid['position_group'].isin(['Wide Attacker', 'Center Forward'])]
+df['plot_label'] = df['player_short_name'] + ' | ' + df['position_group']
 
-yamal_williams = df[df['player_id'].isin([639784, 35342])]
-
-merged_df = pd.concat([real_forwards, yamal_williams], ignore_index=True)
-fig, ax = bar.plot_bar_chart(merged_df, 'psv99_top5',data_point_id='team_name',
-                             plot_title='Comparison - Real Madrid Forwards VS Nico Williams & Lamine Yamal',
-                             label='Top 5 PSV-99 Values', primary_highlight_group=['Athletic Club de Bilbao',
-                            'FC Barcelona'], primary_highlight_color='#17D9BA')
+fig, ax = bar.plot_bar_chart(df=df[(df['team_id'] == 262)], 
+                             metric='psv99',
+                             label='Peak Sprint Velocity 99th Percentile',
+                             unit='km/h',
+                             primary_highlight_group=[12253, 12251, 993, 31993],
+                             add_bar_values=True,
+                             data_point_id='player_id',
+                             data_point_label='plot_label')
 ```
 ### Bar Plot Figure:
-![standard bar plot](https://github.com/MarkosBont/skillcorner_library_cleanup/blob/34de90fca73d5486a144c00a2c332f9b99561747/example_plots/bar_plot.png)
+![](https://github.com/liamMichaelBailey/skillcornerviz/blob/master/example_plots/bar_plot.png?raw=true)
 ## <u>Scatter Plot</u>
 ### Code Snippet:
 ```python
-from skillcornerviz.standard_plots import scatter_plot as scpl
-from skillcornerviz.utils import skillcorner_physical_utils as put
+from skillcornerviz.standard_plots import scatter_plot as scatter
+from skillcornerviz.utils import skillcorner_physical_utils as p_utils
 from skillcorner.client import SkillcornerClient
 import pandas as pd
 
 
 client = SkillcornerClient(username='YOUR USERNAME', password='YOUR PASSWORD')
-data = client.get_physical(params={'competition': 4, 'season': 28,
-                                    'group_by': 'player,team,competition,season,group',
-                                    'playing_time__gte': 60, 'count_match__gte':8,
-                                    'data_version': '3'})
+data = client.get_physical(params={'competition': 4, 
+                                   'season': 28,
+                                   'group_by': 'player,team,competition,season,group',
+                                   'possession': 'all,tip,otip', 
+                                   'playing_time__gte': 60,
+                                   'count_match__gte':8,
+                                   'data_version': '3'})
 
 df = pd.DataFrame(data)
+metrics = p_utils.add_standard_metrics(df)
 
-midfielders = df[df['position_group'].isin(['Midfield'])]
-
-put.add_p90(midfielders, 'total_distance_full_all')
-put.add_p90(midfielders, 'hi_distance_full_all')
-
-fig, ax = scpl.plot_scatter(midfielders, x_metric='total_distance_full_all P90',y_metric='hi_distance_full_all P90', data_point_id='team_name',
-                            plot_title='Real Madrid VS Barcelona || Midfielders', x_label='Total distance Per 90 (Meters)',
-                            y_label="High Intensity Distance Per 90 (Meters)", primary_highlight_group=['FC Barcelona'], primary_highlight_color='#17D9BA',
-                            secondary_highlight_group=['Real Madrid CF'], secondary_highlight_color='#9E4DFF')
+fig, ax = scatter.plot_scatter(df=df[df['position_group'].isin(['Midfield'])], 
+                               x_metric='total_distance_per_90',
+                               y_metric='hi_distance_per_90', 
+                               data_point_id='team_name',
+                               data_point_label='player_short_name',
+                               x_label='Total Distance Per 90',
+                               y_label="High Intensity Distance Per 90",
+                               x_unit='m',
+                               y_unit='m',
+                               primary_highlight_group=['FC Barcelona'], 
+                               secondary_highlight_group=['Real Madrid CF'])
 ```
+
 ### Scatter Plot Figure
-![standard scatter plot](example_plots/scatter_plot.png)
+![](https://github.com/liamMichaelBailey/skillcornerviz/blob/master/example_plots/scatter_plot.png?raw=true)
 
 ## <u>Radar Plot</u>
 ### Code Snippet
 ```python
-from skillcornerviz.standard_plots import radar_plot as rad
+from skillcornerviz.standard_plots import radar_plot as radar
 from skillcorner.client import SkillcornerClient
 import pandas as pd
 
 client = SkillcornerClient(username='YOUR_USERNAME', password='YOUR_PASSWORD')
 
 # Request data for LaLiga 2023/2024.
-la_liga = client.get_in_possession_off_ball_runs(params={'competition': 4, 'season': 28,
-                                                         'playing_time__gte': 60, 'count_match__gte': 8,
-                                                         'average_per': '30_min_tip',
-                                                         'group_by': 'player,competition,team,group',
-                                                         'run_type': 'all,run_in_behind,run_ahead_of_the_ball,'
-                                                                     'support_run,pulling_wide_run,coming_short_run,'
-                                                                     'underlap_run,overlap_run,dropping_off_run,'
-                                                                     'pulling_half_space_run,cross_receiver_run'})
+data = client.get_in_possession_off_ball_runs(params={'competition': 4, 
+                                                      'season': 28,
+                                                      'playing_time__gte': 60,
+                                                      'count_match__gte': 8,
+                                                      'average_per': '30_min_tip',
+                                                      'group_by': 'player,competition,team,group',
+                                                      'run_type': 'all,run_in_behind,run_ahead_of_the_ball,'
+                                                                 'support_run,pulling_wide_run,coming_short_run,'
+                                                                 'underlap_run,overlap_run,dropping_off_run,'
+                                                                 'pulling_half_space_run,cross_receiver_run'})
 
-la_liga_df = pd.DataFrame(la_liga)
+df = pd.DataFrame(data)
 
 RUNS = {'count_cross_receiver_runs_per_30_min_tip': 'Cross Receiver',
         'count_runs_in_behind_per_30_min_tip': ' In Behind',
@@ -131,56 +143,74 @@ RUNS = {'count_cross_receiver_runs_per_30_min_tip': 'Cross Receiver',
         'count_pulling_wide_runs_per_30_min_tip': 'Pulling Wide'}
 
 # Plot off-ball run radar for Nico Williams.
-fig, ax = rad.plot_radar(la_liga_df[la_liga_df['group'] == 'Wide Attacker'],
-                         data_point_id='player_id', label=35342,
-                         plot_title='Off-Ball Run Profile | Nico Williams 2023/24',
-                         metrics=RUNS.keys(), metric_labels=RUNS, percentiles_precalculated=False,
-                         suffix=' Runs P30 TIP', positions='Wide Attackers', matches=8,
-                         minutes=60, competitions='LaLiga', seasons='2023/2024', add_sample_info=True)
+fig, ax = radar.plot_radar(df=df[df['group'] == 'Wide Attacker'],
+                            data_point_id='player_id',
+                            label=35342,
+                            plot_title='Off-Ball Run Profile | Nico Williams 2023/24',
+                            metrics=RUNS.keys(), 
+                            metric_labels=RUNS, 
+                            percentiles_precalculated=False,
+                            suffix=' Runs P30 TIP', 
+                            positions='Wide Attackers',
+                            matches=8,
+                            minutes=60, 
+                            competitions='LaLiga', 
+                            seasons='2023/2024', 
+                            add_sample_info=True)
 
 ```
 ### Radar Plot Figure
-![standard radar plot](example_plots/radar_plot.png)
+![](https://github.com/liamMichaelBailey/skillcornerviz/blob/master/example_plots/radar_plot.png?raw=true)
 
 ## <u>Summary Table</u>
 ### Code Snippet
 ```python
-from skillcornerviz.standard_plots import summary_table as sumtab
-from skillcornerviz.utils import skillcorner_physical_utils as put
+from skillcornerviz.standard_plots import summary_table as table
+from skillcornerviz.utils import skillcorner_physical_utils as p_utils
 from skillcorner.client import SkillcornerClient
 import pandas as pd
 
 client = SkillcornerClient(username='YOUR USERNAME', password='YOUR PASSWORD')
-la_liga = client.get_physical(params={'competition': 4, 'season': 28,
-                                        'group_by': 'player,team,competition,season,group',
-                                        'playing_time__gte': 60, 'count_match__gte': 8,
-                                        'data_version': '3'})
+data = client.get_physical(params={'competition': 4, 
+                                      'season': 28,
+                                      'group_by': 'player,team,competition,season,group',
+                                      'playing_time__gte': 60,
+                                      'count_match__gte': 8,
+                                      'possession': 'all,tip,otip',
+                                      'data_version': '3'})
 
-la_liga_df = pd.DataFrame(la_liga)
+df = pd.DataFrame(data)
+metrics = p_utils.add_standard_metrics(df)
 
-put.add_p90(la_liga_df, 'total_distance_full_all')
-put.add_p90(la_liga_df, 'hi_distance_full_all')
-put.add_p90(la_liga_df, 'hsr_distance_full_all')
-put.add_p90(la_liga_df, 'running_distance_full_all')
-put.add_p90(la_liga_df, 'sprint_distance_full_all')
+plot_metrics = {'meters_per_minute_tip' : 'Meters Per Minute TIP',
+        'meters_per_minute_otip' : 'Meters Per Minute OTIP',
+        'highaccel_count_per_60_bip': 'Number Of High Accels Per 60 BIP',
+        'highdecel_count_per_60_bip': 'Number Of High Decels Per 60 BIP',
+        'sprint_count_per_60_bip': 'Number Sprints Per 60 BIP',
+        'psv99' : 'Peak Sprint Velocity 99th Percentile'}
 
-RUNS = {'total_distance_full_all P90': 'Total Distance P90',
-        'hi_distance_full_all P90' : 'HI Distance P90',
-        'hsr_distance_full_all P90' : 'HSR Distance P90',
-        'running_distance_full_all P90': 'Running Distance P90',
-        'sprint_distance_full_all P90' : 'Sprint Distance P90'}
-
-fig, ax = sumtab.plot_summary_table(la_liga_df, metrics=RUNS.keys(), metric_col_names=RUNS.values(), players=['Axel Witsel', 'Francis Coquelin',
-                                                                                                     'Sergi Darder Moll', 'Toni Kroos',
-                                                                                                     'Djibril Sow'])
+fig, ax = table.plot_summary_table(df=df[df['position_group'] == 'Midfield'], 
+                                   metrics=list(plot_metrics.keys()), 
+                                   metric_col_names=plot_metrics.values(), 
+                                   percentiles_mode=True,
+                                   data_point_id='player_name',
+                                   data_point_label='player_short_name',
+                                   highlight_group=[
+                                            'Fermín López Marín',
+                                            'Francis Coquelin',
+                                            'Beñat Turrientes Imaz',
+                                            'Sergi Darder Moll',
+                                            'Toni Kroos',
+                                            'Djibril Sow'])
 ```
 ### Summary Table Figure
-![Standard Summary Table](example_plots/summary_table.png)
+![](https://github.com/liamMichaelBailey/skillcornerviz/blob/master/example_plots/summary_table.png?raw=true)
 
 ## <u>Swarm/Violin Plot</u>
 ### Code Snippet
 ```python
-from skillcornerviz.standard_plots import swarm_violin_plot as svp
+from skillcornerviz.standard_plots import swarm_violin_plot as swarm_plot
+from skillcornerviz.utils import skillcorner_game_intelligence_utils as gi_utils
 from skillcorner.client import SkillcornerClient
 import pandas as pd
 
@@ -189,32 +219,30 @@ client = SkillcornerClient(username='YOUR_USERNAME', password='YOUR_PASSWORD')
 data = client.get_in_possession_off_ball_runs(params={'season': 28,
                                                       'competition': 4,
                                                       'group_by': 'player,team,competition,season,group',
-                                                      'playing_time__gte': 60, 'count_match__gte': 8
-                                                      }
-                                              )
+                                                      'playing_time__gte': 60, 
+                                                      'count_match__gte': 8})
 df = pd.DataFrame(data)
+metrics = gi_utils.add_run_normalisations(df)
 
-x_label = 'Threat Per 100 Runs'
-y_labels = ['Center Forwards',
-            'Midfielders']
-x_unit = ''
-comparison_players = ['Toni Kroos', 'Djibril Sow', 'Luka Modrić', 'Vinícius José Paixão de Oliveira Júnior',
-                      'Artem Dobvyk', 'Eduardo Camavinga', 'Frenkie De Jong', 'Jude Bellingham',
-                      'Robert Lewandowski', 'Álvaro Borja Morata Martin', 'Gerard Moreno Balaguero',
-                      'Mikel Oyarzabal Ugarte', 'Mikel Merino Zazón']
+midfielders = [4450, 9188, 25738, 118870, 24120, 13908]
+forwards = [733366, 9106, 7619, 16381, 1401]
 
-fig, ax = svp.plot_swarm_violin(df=df,
-                                x_metric='runs_threat_per_match',
+fig, ax = swarm_plot.plot_swarm_violin(df=df,
+                                x_metric='runs_dangerous_percentage',
                                 y_metric='group',
                                 y_groups=['Center Forward', 'Midfield'],
-                                x_label=x_label,
-                                y_group_labels=y_labels,
-                                x_unit=x_unit,
-                                secondary_highlight_group=comparison_players,
+                                x_label='Dangerous Run Percentage',
+                                y_group_labels=['Center Forwards',
+                                                'Midfielders'],
+                                x_unit='%',
+                                primary_highlight_group=midfielders,
+                                secondary_highlight_group=forwards,
+                                data_point_id='player_id',
+                                data_point_label='short_name',
                                 point_size=7)
 ```
 ### Swarm Violin Plot Figure
-![standard svp plot](example_plots/swarm_violin_plot.png)
+![](https://github.com/liamMichaelBailey/skillcornerviz/blob/master/example_plots/swarm_violin_plot.png?raw=true)
 
 ----------------------------------------------------------------------------------------------------------------------------
 

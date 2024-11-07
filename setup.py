@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='skillcornerviz',
-    version='1.0.9',
+    version='1.1.1',
 
     url='https://github.com/liamMichaelBailey/skillcornerviz',
     author='Liam Michael Bailey',
