@@ -43,7 +43,7 @@ skillcornerviz/
 ### Code Snippet:
 ```python
 from skillcornerviz.standard_plots import bar_plot as bar
-from src.skillcornerviz.utils import skillcorner_physical_utils as put
+from skillcornerviz.utils import skillcorner_physical_utils as put
 from skillcorner.client import SkillcornerClient
 import pandas as pd
 
@@ -72,7 +72,7 @@ fig, ax = bar.plot_bar_chart(merged_df, 'psv99_top5',data_point_id='team_name',
 ### Code Snippet:
 ```python
 from skillcornerviz.standard_plots import scatter_plot as scpl
-from src.skillcornerviz.utils import skillcorner_physical_utils as put
+from skillcornerviz.utils import skillcorner_physical_utils as put
 from skillcorner.client import SkillcornerClient
 import pandas as pd
 
@@ -146,7 +146,7 @@ fig, ax = rad.plot_radar(la_liga_df[la_liga_df['group'] == 'Wide Attacker'],
 ### Code Snippet
 ```python
 from skillcornerviz.standard_plots import summary_table as sumtab
-from src.skillcornerviz.utils import skillcorner_physical_utils as put
+from skillcornerviz.utils import skillcorner_physical_utils as put
 from skillcorner.client import SkillcornerClient
 import pandas as pd
 
