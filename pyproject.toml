@@ -19,7 +19,6 @@ classifiers = ["Development Status :: 4 - Beta", "Intended Audience :: Other Aud
                "Programming Language :: Python :: 3.7", "Programming Language :: Python :: 3.8",
                "Programming Language :: Python :: 3.9", "Operating System :: OS Independent"]
 dependencies = ['adjustText>=0.7.3',
-                'aiohttp>=3.8.4',
                 'matplotlib>=3.7.2',
                 'numpy>=1.24.2',
                 'pandas>=1.5.3',
@@ -27,7 +26,7 @@ dependencies = ['adjustText>=0.7.3',
                 'setuptools>=65.0.0']
 
 [project.urls]
-GitHub = "https://github.com/MarkosBont/skillcornerviz"
+GitHub = "https://github.com/liamMichaelBailey/skillcornerviz"
 
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -4,9 +4,9 @@ setup(
     name='skillcornerviz',
     version='1.0.8',
 
-    url='https://github.com/MarkosBont/skillcorner_library_cleanup',
+    url='https://github.com/liamMichaelBailey/skillcornerviz',
     author='Liam Michael Bailey',
-    author_email='markos.bontozoglou@skillcorner.com',
+    author_email='liam.bailey@skillcorner.com',
 
     packages=find_packages(include=['skillcornerviz', 'skillcornerviz.*']),
 
@@ -24,7 +24,6 @@ setup(
                                      'resources/Roboto/Roboto-ThinItalic.ttf']},
 
     install_requires=['adjustText>=0.7.3',
-                      'aiohttp>=3.8.4',
                       'matplotlib>=3.7.2',
                       'numpy>=1.24.2',
                       'pandas>=1.5.3',
