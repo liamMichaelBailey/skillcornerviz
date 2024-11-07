@@ -114,7 +114,7 @@ def add_standard_metrics(df):
 
         # Adds each metric, as well as each normalization to the metrics list
         metrics.append(m)
-        metrics.append(m + 'per_90')
+        metrics.append(m + '_per_90')
         metrics.append(m + '_full_bip')
         metrics.append(m + '_per_60_bip')
         metrics.append(m + '_full_tip')
@@ -123,23 +123,23 @@ def add_standard_metrics(df):
         metrics.append(m + '_per_30_otip')
 
     # Adds several columns with metrics to the df, as well as their names to the metrics list
-    df['meters_per_minutes'] = df['total_distance_full_all'] / df['minutes_full_all']
-    df['meters_per_minutes_bip'] = df['total_distance_full_bip'] / df['minutes_full_bip']
-    df['meters_per_minutes_tip'] = df['total_distance_full_tip'] / df['minutes_full_tip']
-    df['meters_per_minutes_otip'] = df['total_distance_full_otip'] / df['minutes_full_otip']
-    metrics.append('meters_per_minutes')
-    metrics.append('meters_per_minutes_bip')
-    metrics.append('meters_per_minutes_tip')
-    metrics.append('meters_per_minutes_otip')
+    df['meters_per_minute'] = df['total_distance_full_all'] / df['minutes_full_all']
+    df['meters_per_minute_bip'] = df['total_distance_full_bip'] / df['minutes_full_bip']
+    df['meters_per_minute_tip'] = df['total_distance_full_tip'] / df['minutes_full_tip']
+    df['meters_per_minute_otip'] = df['total_distance_full_otip'] / df['minutes_full_otip']
+    metrics.append('meters_per_minute')
+    metrics.append('meters_per_minute_bip')
+    metrics.append('meters_per_minute_tip')
+    metrics.append('meters_per_minute_otip')
 
-    df['hi_meters_per_minutes'] = df['hi_distance_full_all'] / df['minutes_full_all']
-    df['hi_meters_per_minutes_bip'] = df['hi_distance_full_bip'] / df['minutes_full_bip']
-    df['hi_meters_per_minutes_tip'] = df['hi_distance_full_tip'] / df['minutes_full_tip']
-    df['hi_meters_per_minutes_otip'] = df['hi_distance_full_otip'] / df['minutes_full_otip']
-    metrics.append('hi_meters_per_minutes')
-    metrics.append('hi_meters_per_minutes_bip')
-    metrics.append('hi_meters_per_minutes_tip')
-    metrics.append('hi_meters_per_minutes_otip')
+    df['hi_meters_per_minute'] = df['hi_distance_full_all'] / df['minutes_full_all']
+    df['hi_meters_per_minute_bip'] = df['hi_distance_full_bip'] / df['minutes_full_bip']
+    df['hi_meters_per_minute_tip'] = df['hi_distance_full_tip'] / df['minutes_full_tip']
+    df['hi_meters_per_minute_otip'] = df['hi_distance_full_otip'] / df['minutes_full_otip']
+    metrics.append('hi_meters_per_minute')
+    metrics.append('hi_meters_per_minute_bip')
+    metrics.append('hi_meters_per_minute_tip')
+    metrics.append('hi_meters_per_minute_otip')
 
     df['distance_per_sprint'] = df['sprint_distance_full_all'] / df['sprint_count_full_all']
     df['distance_per_sprint_bip'] = df['sprint_distance_full_bip'] / df['sprint_count_full_bip']

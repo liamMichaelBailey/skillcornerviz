@@ -1,9 +1,5 @@
 """
 Liam Bailey
-Last update MN 20/04/2023
-Added _rev function ; Changed initial function
-
-Markos Bontozoglou
 12/06/2024
 Summary Table
 The plot_summary_table function is used to generate a summary table based on the given data.
@@ -23,6 +19,7 @@ from skillcornerviz.utils.constants import TEXT_COLOR, DARK_BASE_COLOR
 from skillcornerviz.utils import skillcorner_utils as skcu
 from pkg_resources import resource_filename
 from matplotlib import font_manager as fm
+import pandas as pd
 
 fonts = ['resources/Roboto/Roboto-Black.ttf',
          'resources/Roboto/Roboto-BlackItalic.ttf',
@@ -46,195 +43,41 @@ plt.rcParams["font.family"] = "Roboto"
 def plot_summary_table(df,
                        metrics,
                        metric_col_names,
-                       players,
-                       figsize=(10, 4),
-                       meta=['player_name'],
-                       mode='value+rank'):
+                       highlight_group,
+                       meta=None,
+                       mode='values+rank',
+                       percentiles_mode=False,
+                       invert_percentile_metrics=None,
+                       fontsize=None,
+                       dividing_lines=None,
+                       metric_col_space=None,
+                       data_point_id='player_name',
+                       data_point_label='player_name',
+                       column_order=None,
+                       split_column_names=True,
+                       dark_mode=False,
+                       rotate_column_names=False,
+                       split_metric_names=True,
+                       metrics_in_caps=False,
+                       figsize=(10, 4)):
     """
-    Plot a summary table with players as rows.
+    Plot a summary table with a dimension as a column.
 
     Parameters:
     - df (DataFrame): The data to be visualized in the table.
     - metrics (list): List of metric names to display.
     - metric_col_names (list): List of column names for metrics.
-    - players (list): List of player names to include in the table.
-    - figsize (tuple): Figure size (width, height).
-    - meta (list): List of metadata columns.
-    - mode (str): Display mode ('value+rank', 'rank', 'value').
-
-    Returns:
-    - fig (Figure): The Matplotlib Figure object.
-    - ax (Axes): The Matplotlib Axes object.
-    """
-    plot_df = df[df['player_name'].isin(players)]
-    # Filters the DataFrame to only include rows that include 'player_name' in the list 'players'
-    plot_df = plot_df.iloc[::-1]
-    # Reverses the order of the rows in the DataFrame
-    plot_df = plot_df.reset_index(drop=True)
-    # Resets the indexes of the DataFrame
-
-    fig, ax = plt.subplots(figsize=figsize)  # Creates a figure
-
-    # Initialize metric columns and their rank columns with a default rank of 'Very Low'
-    for m in metrics:
-        plot_df[m] = plot_df[m].round(1)
-        plot_df[m + '_rank'] = 'Very Low'
-
-    # Assign ranks based on the standard deviation bins
-    pct_bins = [-2, -1, 1, 2]
-    bin_names = ['Low', 'Average', 'High', 'Very High']
-    for bin, name in zip(pct_bins, bin_names):
-        for m in metrics:
-            plot_df.loc[plot_df[m] > df[m].mean() +
-                        (df[m].std() * bin),
-                        m + '_rank'] = name
-
-    columns = meta.copy()
-    columns += metrics
-
-    # Formatting of column names
-    column_names = [i.replace('_', ' ').title().replace(' ', '\n') for i in meta]
-
-    column_names += metric_col_names
-
-    # Determine positions for the columns in the summary table
-    if len(meta) == 1:
-        positions = [0.25]
-    else:
-        positions = [0.25 + 2 * i for i in range(len(meta))]
-
-    # Add the positions for the columns
-    i = max(positions) + 1.75
-    for m in metrics:
-        positions.append(i)
-        i += 1.25
-
-    n_rows = plot_df.shape[0]
-
-    # Sets limits for x, y axes
-    ax.set_xlim(0, max(positions) + 0.5)
-    ax.set_ylim(0, n_rows + 1)
-
-    # Add table's main text
-    for i in range(n_rows):
-        for j, column in enumerate(columns):
-            if j == 0:
-                ha = 'left'
-            else:
-                ha = 'center'
-
-            if 'ratio' in column.lower() or 'percentage' in column.lower():
-                appendix = ' %'
-            else:
-                appendix = ''
-
-            if column in meta:
-                text_label = f'{plot_df[column].iloc[i]}'
-                text_label = "\n".join(text_label.split(" ", 1))
-                rank_label = ''
-                weight = 'bold'
-                annotation_text = text_label + appendix + rank_label
-            else:
-                text_label = f'{plot_df[column].iloc[i]}'
-                rank_label = f'{plot_df[column + "_rank"].iloc[i]}'
-                rank_label = '\n' + rank_label
-                weight = 'normal'
-                if mode == 'value+rank':
-                    annotation_text = text_label + appendix + rank_label
-                elif mode == 'rank':
-                    annotation_text = rank_label.replace('\n', '')
-                elif mode == 'value':
-                    annotation_text = text_label + appendix
-
-            if 'High' in rank_label:
-                colour = GREEN_TO_RED_SCALE[4]
-                weight = 'bold'
-            elif 'Low' in rank_label:
-                colour = GREEN_TO_RED_SCALE[0]
-                weight = 'bold'
-            else:
-                colour = TEXT_COLOR
-
-            ax.annotate(
-                xy=(positions[j], i + .5),
-                text=annotation_text,
-                ha=ha,
-                va='center',
-                weight=weight,
-                color=colour
-            )
-
-    # Add column names
-    for index, c in enumerate(column_names):
-        if index == 0:
-            ha = 'left'
-        else:
-            ha = 'center'
-
-        if len(c) > 25:
-            column_label = skcu.split_string_with_new_line(c)
-        else:
-            column_label = c
-
-        ax.annotate(
-            xy=(positions[index], n_rows + .25),
-            text=column_label,
-            ha=ha,
-            va='bottom',
-            weight='bold',
-            color=TEXT_COLOR
-        )
-
-    # Add dividing lines
-    ax.plot([ax.get_xlim()[0], ax.get_xlim()[1]], [n_rows, n_rows], lw=1.5, color=TEXT_COLOR, marker='', zorder=4)
-    ax.plot([ax.get_xlim()[0], ax.get_xlim()[1]], [0, 0], lw=1.5, color=TEXT_COLOR, marker='', zorder=4)
-    for x in range(1, n_rows):
-        ax.plot([ax.get_xlim()[0], ax.get_xlim()[1]], [x, x], lw=1.15, color=TEXT_COLOR, alpha=0.5, ls=':', zorder=3,
-                marker='')
-
-    ax.set_axis_off()
-    plt.tight_layout()
-    plt.show()
-
-    return fig, ax
-
-
-# ----------------
-# PLOT TABLE WITH PLAYERS AS COLUMNS : BEST IF YOU HAVE A LOT OF METRICS
-# ----------------
-
-
-def plot_summary_table_rev(df, metrics, metric_col_names, players, figsize=(10, 4), meta=None,
-                           mode='values+rank',
-                           percentiles_mode=False,
-                           font_size=None,
-                           dividing_lines=None,
-                           metric_col_space=None,
-                           data_point_id='player_name',
-                           data_point_label='player_name',
-                           column_order=None,
-                           split_column_names=True,
-                           dark_mode=False,
-                           rotate_column_names=False,
-                           split_metric_names=True):
-    """
-    Plot a summary table with players as columns.
-
-    Parameters:
-    - df (DataFrame): The data to be visualized in the table.
-    - metrics (list): List of metric names to display.
-    - metric_col_names (list): List of column names for metrics.
-    - players (list): List of player names to include in the table.
+    - highlight_group (list): List of names to include in the table.
     - figsize (tuple): Figure size (width, height).
     - meta (list): List of metadata columns.
     - mode (str): Display mode ('values+rank', 'rank', 'values').
     - percentiles_mode (bool): Whether to use percentiles for ranking.
-    - font_size (float): Font size for the table.
+    - fontsize (float): Font size for the table.
     - dividing_lines (list): Positions to add dividing lines.
     - metric_col_space (float): Space between metric columns.
     - data_point_id (str): The data point identifier column.
     - data_point_label (str): The label for data points.
-    - column_order (list): Custom order of player columns.
+    - column_order (list): Custom order of data_point_id columns.
     - split_column_names (bool): Split long column names.
     - dark_mode (bool): Enable dark mode (True) or light mode (False).
     - rotate_column_names (bool): Rotate column names if True.
@@ -245,57 +88,77 @@ def plot_summary_table_rev(df, metrics, metric_col_names, players, figsize=(10, 
     - ax (Axes): The Matplotlib Axes object.
     """
 
-    # Assinging values to parameters if none are given
     if dividing_lines is None:
         dividing_lines = []
     if meta is None:
         meta = [data_point_id]
+    if invert_percentile_metrics is None:
+        invert_percentile_metrics = []
 
-    if font_size is None:
-        if len(players) <= 9:
-            font_size = 9
-        elif len(players) <= 12:
-            font_size = 7
+    if fontsize is None:
+        if len(highlight_group) <= 9:
+            fontsize = 7
+        elif len(highlight_group) <= 12:
+            fontsize = 6.5
         else:
-            font_size = 6.5
+            fontsize = 6
 
-    # Assigning a space between metric columns if there is none given.
     if metric_col_space is None:
-        if len(players) <= 4:
+        if len(highlight_group) <= 4:
             metric_col_space = 1.5
-        elif len(players) <= 7:
+        elif len(highlight_group) <= 7:
             metric_col_space = 2.5
-        elif len(players) <= 14:
+        elif len(highlight_group) <= 14:
             metric_col_space = 3
         else:
             metric_col_space = 3.5
 
     # Split column names if they are too long.
-    if split_metric_names:
+    if split_metric_names == True:
         metric_col_names = [skcu.split_string_with_new_line(s) if len(s) > 25 else s for s in metric_col_names]
+
+    column_name_fontsize = fontsize * 1
 
     plot_df = df.copy()
 
-    # Rounds each metric to one decimal place
     for m in metrics:
         plot_df[m] = plot_df[m].round(1)
 
-    if not percentiles_mode:
+    if percentiles_mode == False:
         pct_bins = [0, 10, 20, 80, 90]
         bin_names = ['Very Low', 'Low', 'Average', 'High', 'Very High']
         for bin, name in zip(pct_bins, bin_names):
             for m in metrics:
-                plot_df.loc[(plot_df[m].rank(pct=True, na_option='keep') * 100).round(2) >= int(bin),
-                            m + '_pct'] = name
+                if m in invert_percentile_metrics:
+                    plot_df.loc[
+                        (plot_df[m].rank(pct=True, na_option='keep', ascending=False) * 100).round(2) >= int(bin),
+                        m + '_pct'] = name
+                else:
+                    plot_df.loc[(plot_df[m].rank(pct=True, na_option='keep') * 100).round(2) >= int(bin),
+                                m + '_pct'] = name
     else:
-        skcu.add_percentile_values(plot_df, metrics)
+        for m in metrics:
+            if m in invert_percentile_metrics:
+                plot_df[m + '_pct'] = (plot_df[m].rank(pct=True, na_option='keep', ascending=False) * 100).round(2)
+            else:
+                plot_df[m + '_pct'] = (plot_df[m].rank(pct=True, na_option='keep', ascending=True) * 100).round(2)
 
-    # Filters the df to only include players that are in the list 'players'
-    plot_df = plot_df[plot_df[data_point_id].isin(players)]
+    plot_df = plot_df[plot_df[data_point_id].isin(highlight_group)]
 
-    # Will have two lists, one with the player ID's, and one with their names
-    players = list(plot_df[data_point_id])
-    player_names = list(plot_df[data_point_label])
+
+    if column_order is None:
+        plot_df[data_point_id] = pd.Categorical(plot_df[data_point_id], categories=highlight_group, ordered=True)
+        plot_df = plot_df.sort_values(data_point_id)
+        columns = ['index'] + highlight_group
+
+    else:
+        plot_df[data_point_id] = pd.Categorical(plot_df[data_point_id], categories=column_order, ordered=True)
+        plot_df = plot_df.sort_values(data_point_id)
+        columns = ['index'] + column_order
+
+    highlight_group = list(plot_df[data_point_id])
+    highlight_labels = list(plot_df[data_point_label])
+
 
     text_color = 'white' if dark_mode else TEXT_COLOR
     facecolor = TEXT_COLOR if dark_mode else 'white'
@@ -308,8 +171,7 @@ def plot_summary_table_rev(df, metrics, metric_col_names, players, figsize=(10, 
     fig.patch.set_facecolor(facecolor)
     ax.set_facecolor(facecolor)
 
-    # DIFFERENCE with previous plot
-    # Formatting of the DataFrame
+    ### DIFFERENCE
     for i in metrics:
         plot_df[i] = plot_df[i].astype(str) + ' ' + plot_df[i + '_pct'].astype(str)
     plot_df = plot_df[meta + metrics]
@@ -319,31 +181,28 @@ def plot_summary_table_rev(df, metrics, metric_col_names, players, figsize=(10, 
     plot_df = plot_df.set_index(data_point_id.replace('_', ' ').capitalize()).T.reset_index()
     plot_df = plot_df.iloc[::-1].reset_index(drop=True)
 
-    if column_order is None:
-        # Columns start with index and then are followed by player ID's
-        columns = ['index'] + players
-        if split_column_names is True:
-            # Splits columns using a newline character
-            column_names = [''] + [skcu.split_string_with_new_line(i) for i in player_names]
-        else:
-            column_names = [''] + player_names
-    else:
-        # If a custom column order is given, columns are assigned this order
-        columns = ['index'] + column_order
-        if split_column_names is True:
-            # Splits columns using a newline character
-            column_names = [''] + [skcu.split_string_with_new_line(i) for i in column_order]
-        else:
-            column_names = [''] + column_order
 
-    positions = [0.0] + [(i + metric_col_space) * 2 for i in range(0, len(players))]
-    n_rows = plot_df.shape[0]
+    # if column_order is None:
+    #     columns = ['index'] + highlight_group
+    if split_column_names is True:
+        column_names = [''] + [skcu.split_string_with_new_line(i) if i[1] != '.' else i for i in highlight_labels]
+    else:
+        column_names = [''] + highlight_labels
+    # else:
+    #     columns = ['index'] + column_order
+    #     if split_column_names is True:
+    #         column_names = [''] + [skcu.split_string_with_new_line(i) if i[1] != '.' else i for i in column_order]
+    #     else:
+    #         column_names = [''] + column_order
+
+    positions = [0.0] + [(i + metric_col_space) * 2 for i in range(0, len(highlight_group))]
+    nrows = plot_df.shape[0]
 
     ax.set_xlim(0, max(positions) + 1)
-    ax.set_ylim(0, n_rows + 1)
-
+    ax.set_ylim(0, nrows + 1)
     # Add table's main text
-    for i in range(n_rows):
+    for i in range(nrows):
+
         for j, column in enumerate(columns):
             if j == 0:
                 ha = 'left'
@@ -351,24 +210,25 @@ def plot_summary_table_rev(df, metrics, metric_col_names, players, figsize=(10, 
                 ha = 'center'
 
             if j != 0:
-                if 'ratio ' in ' ' + plot_df['index'].iloc[i].lower() + ' ' or \
-                        ' percentage ' in ' ' + plot_df['index'].iloc[i].lower() + ' ' or \
-                        ' % ' in ' ' + plot_df['index'].iloc[i].lower() + ' ' or \
-                        ' ratio' in ' ' + plot_df['index'].iloc[i].lower():
+                col_name = plot_df['index'].iloc[i].lower().replace('\n', ' ')
+                if 'ratio ' in ' ' + col_name + ' ' or \
+                        ' percentage ' in ' ' + col_name + ' ' or \
+                        ' % ' in ' ' + col_name + ' ' or \
+                        ' ratio' in ' ' + col_name:
                     appendix = ' %'
-                elif ' velocity ' in ' ' + plot_df['index'].iloc[i].lower() + ' ' or \
-                        ' psv-99 ' in ' ' + plot_df['index'].iloc[i].lower() + ' ':
+                elif ' velocity ' in ' ' + col_name + ' ' or \
+                        ' psv-99 ' in ' ' + col_name + ' ':
                     appendix = ' km/h'
-                elif ' distance ' in ' ' + plot_df['index'].iloc[i].lower() + ' ':
+                elif ' distance ' in ' ' + col_name + ' ':
                     appendix = 'm'
-                elif ' meters per minute ' in ' ' + plot_df['index'].iloc[i].lower() + ' ':
+                elif 'meters per minute' in ' ' + col_name + ' ':
                     appendix = 'm'
-                elif ' threat ' in ' ' + plot_df['index'].iloc[i].lower() + ' ':
+                elif ' threat ' in ' ' + col_name + ' ':
                     appendix = ''
-                elif ' passes ' in ' ' + plot_df['index'].iloc[i].lower() + ' ' or \
-                        ' pass ' in ' ' + plot_df['index'].iloc[i].lower() + ' ':
+                elif ' passes ' in ' ' + col_name + ' ' or \
+                        ' pass ' in ' ' + col_name + ' ':
                     appendix = ' Passes'
-                elif ' runs ' in ' ' + plot_df['index'].iloc[i].lower() + ' ':
+                elif ' runs ' in ' ' + col_name + ' ':
                     appendix = ' Runs'
                 else:
                     appendix = ''
@@ -377,6 +237,7 @@ def plot_summary_table_rev(df, metrics, metric_col_names, players, figsize=(10, 
 
             if column == 'index':
                 text_label = f'{plot_df[column].iloc[i]}'
+                text_label = text_label.upper() if metrics_in_caps else text_label
                 rank_label = ''
                 weight = 'bold'
                 annotation_text = text_label + appendix + rank_label
@@ -406,7 +267,7 @@ def plot_summary_table_rev(df, metrics, metric_col_names, players, figsize=(10, 
                     annotation_text = ''
 
             if 'nan' not in str(plot_df[column].iloc[i]):
-                if not percentiles_mode or column == 'index':
+                if percentiles_mode == False or column == 'index':
                     if 'High' in rank_label:
                         colour = green_highlight
                         weight = 'bold'
@@ -415,7 +276,7 @@ def plot_summary_table_rev(df, metrics, metric_col_names, players, figsize=(10, 
                         weight = 'bold'
                     else:
                         colour = text_color
-                elif percentiles_mode:
+                elif percentiles_mode == True:
                     if rank_label != '':
                         if float(rank_label) > 79:
                             colour = green_highlight
@@ -432,7 +293,7 @@ def plot_summary_table_rev(df, metrics, metric_col_names, players, figsize=(10, 
                         colour = text_color
                         bar_color = DARK_BASE_COLOR
 
-                    if mode != 'values':  ### HUMANIZE PACKAGE
+                    if mode == 'values+rank' or mode == 'rank':  ### HUMANIZE PACKAGE
                         if rank_label != '':
                             if rank_label[-1] == '3':
                                 annotation_text = annotation_text + 'rd'
@@ -459,7 +320,7 @@ def plot_summary_table_rev(df, metrics, metric_col_names, players, figsize=(10, 
                     va='center',
                     weight=weight,
                     color=colour,
-                    font_size=font_size,
+                    fontsize=fontsize,
                     zorder=10
                 )
             else:
@@ -470,39 +331,59 @@ def plot_summary_table_rev(df, metrics, metric_col_names, players, figsize=(10, 
                     va='center',
                     weight=weight,
                     color=TEXT_COLOR,
-                    font_size=font_size,
+                    fontsize=fontsize,
                     zorder=10)
 
-                if percentiles_mode:
+                if percentiles_mode == True:
                     ax.add_patch(
                         Rectangle((positions[j] - 1, i), 2 * float(100) / 100, 1, fc='white',
                                   edgecolor=DARK_BASE_COLOR if dark_mode else 'black',
                                   alpha=0.5 if dark_mode else 0.1))
 
     # Add column names
+    text_objects = []
     for index, c in enumerate(column_names):
         if index == 0:
             ha = 'left'
         else:
             ha = 'center'
 
-        if rotate_column_names:
+        if rotate_column_names == True:
             rotation = 30
         else:
             rotation = 0
-        ax.annotate(
-            xy=(positions[index], n_rows + .25),
+        text_objects.append(ax.annotate(
+            xy=(positions[index], nrows + .25),
             text=column_names[index],
             ha=ha,
             va='bottom',
             weight='bold',
             color=text_color,
-            font_size=font_size,
-            rotation=rotation
-        )
+            fontsize=column_name_fontsize,
+            rotation=rotation))
+
+    # Check for overlapping column name labels.
+    overlapping_col_name = False
+    for i in range(len(text_objects)):
+        if i != len(text_objects) - 1:
+            # Get the end position of the text bounding box.
+            bbox = text_objects[i].get_window_extent()
+            x_end, _ = ax.transData.inverted().transform((bbox.x1, bbox.y1))
+            # Get the start position of the next text bounding box.
+            next_bbox = text_objects[i + 1].get_window_extent()
+            x_start, _ = ax.transData.inverted().transform((next_bbox.x0, next_bbox.y0))
+
+            if x_end >= x_start:
+                overlapping_col_name = True
+
+    # Loop over text objects and set rotation if overlap found.
+    if overlapping_col_name:
+        for text_object in text_objects:
+            text_object.set_rotation(30)
+            text_object.set_ha('left')
 
     # Add dividing lines
-    ax.plot([ax.get_xlim()[0], ax.get_xlim()[1]], [n_rows, n_rows], lw=1.5,
+    ax.plot([ax.get_xlim()[0], ax.get_xlim()[1]], [nrows, nrows], lw=1.5,
             color=DARK_PRIMARY_HIGHLIGHT_COLOR if dark_mode else text_color, marker='', zorder=4)
     ax.plot([ax.get_xlim()[0], ax.get_xlim()[1]], [0, 0], lw=1.5,
             color=DARK_PRIMARY_HIGHLIGHT_COLOR if dark_mode else text_color, marker='', zorder=4)
@@ -510,7 +391,7 @@ def plot_summary_table_rev(df, metrics, metric_col_names, players, figsize=(10, 
     for i in dividing_lines:
         ax.plot([ax.get_xlim()[0], ax.get_xlim()[1]], [i, i], lw=1.5, color=DARK_BASE_COLOR, marker='', zorder=4)
 
-    for x in range(1, n_rows):
+    for x in range(1, nrows):
         ax.plot([ax.get_xlim()[0], ax.get_xlim()[1]], [x, x], lw=.5, color=DARK_BASE_COLOR, alpha=0.5, ls='-',
                 zorder=3,
                 marker='')
