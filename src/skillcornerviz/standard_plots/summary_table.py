@@ -122,7 +122,7 @@ def plot_summary_table(df,
     plot_df = df.copy()
 
     for m in metrics:
-        plot_df[m] = plot_df[m].round(1)
+        plot_df[m] = plot_df[m].round(2)
 
     if percentiles_mode == False:
         pct_bins = [0, 10, 20, 80, 90]
